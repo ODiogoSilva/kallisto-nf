@@ -15,6 +15,13 @@
  *
  *   You should have received a copy of the GNU General Public License
  *   along with Kallisto-NF.  If not, see <http://www.gnu.org/licenses/>.
+
+     Usage:
+     nextflow run kallisto.nf \
+     --reads s3://lifebit-featured-datasets/pipelines/kallisto-nf-data/reads \
+     --transcriptome s3://lifebit-featured-datasets/pipelines/kallisto-nf-data/transcriptome/transcriptome.fa \
+     --experiment s3://lifebit-featured-datasets/pipelines/kallisto-nf-data/experiment/hiseq_info.txt \
+     -with-docker -resume
  */
 
 /*
@@ -103,7 +110,7 @@ process mapping {
     set val(name), file(reads) from read_files
 
     output:
-    file "kallisto_${name}" into kallisto_out_dirs
+    file "kallisto_${name}" into kallisto_out_dirs, kallisto_out_dirs_viz
     file "stdout.txt" into kallisto_results
 
     script:
@@ -134,7 +141,7 @@ process sleuth {
 
     output:
     file 'sleuth_object.so'
-    file 'gene_table_results.txt'
+    file 'gene_table_results.txt' into visualisations
 
     script:
     //
@@ -147,10 +154,25 @@ process sleuth {
 }
 
 
+process visualisations {
+    publishDir "${params.output}/Visualisations", mode: 'copy'
 
-/*
- * STEP 12 MultiQC
- */
+    container 'lifebitai/vizjson:latest'
+
+    input:
+    file mapping from kallisto_out_dirs_viz.collect()
+    file gene_table from visualisations
+
+    output:
+    file '.report.json' into results
+
+    script:
+    """
+    tsv2csv.py < $gene_table > gene_table_results.csv
+    csv2json.py gene_table_results.csv kallisto 0
+    """
+}
+
 process multiqc {
     publishDir "${params.output}/MultiQC", mode: 'copy'
 
