@@ -169,7 +169,8 @@ process visualisations {
     script:
     """
     tsv2csv.py < $gene_table > gene_table_results.csv
-    csv2json.py gene_table_results.csv kallisto 0
+    csv2json.py gene_table_results.csv kallisto gene_table_results.json
+    combine_reports.py ./
     """
 }
 
