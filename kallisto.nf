@@ -169,6 +169,7 @@ process visualisations {
     script:
     """
     tsv2csv.py < $gene_table > gene_table_results.csv
+    sed -i '1s/^/index,/' gene_table_results.csv
     csv2json.py gene_table_results.csv kallisto gene_table_results.json
     combine_reports.py ./
     """
