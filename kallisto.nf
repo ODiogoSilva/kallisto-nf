@@ -189,7 +189,7 @@ process multiqc {
 
     output:
     file "*multiqc_report.html" into multiqc_report
-    file "*_data"
+    file "*_data/*"
 
     script:
     rtitle = "--title \"lifebit-ai/kallisto-nf\""
